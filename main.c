@@ -27,50 +27,55 @@ int main(void){
 	/* new := pointer of extension amount */
 	/* head := pointer of snake head */
 	/* tgt := pointer of target */
-	char dir = 'w';
+	char dir = 'd';
+	char prevdir = 'd';
 	int buf;
+	int cnt = 0;
 	init();
 	while(1){
-		system("clear");
 		clearView();
+		
 		/* set snake to field */
 		tgt = tail;
 		while(tgt != NULL){
 			field[tgt->y][tgt->x] = 2;
 			tgt = tgt -> next;
 		}
+
 		/* show field */
-		for(int y=0; y<20; y++){
-			for(int x=0; x<20; x++){
-				if(field[y][x] == WALL) printf("■ ");
-				if(field[y][x] == ESA) printf("◆ ");
-				if(field[y][x] == SNAKE) printf("● ");
-				if(field[y][x] == AREA) printf("□ ");
-				if(field[y][x] == EMPTY) printf("  ");
+		for(int x=0; x<XSIZE; x++){
+			for(int y=0; y<YSIZE; y++){
+				if(field[x][y] == ESA) printf("◆ ");
+				if(field[x][y] == SNAKE) printf("● ");
+				if(field[x][y] == AREA) printf("□ ");
+				if(field[x][y] == EMPTY) printf("  ");
 			}
 			printf("\n");
 		}
-		if(kbhit()){
-			dir = getch();
-			moveSnake(dir);
+
+		dir = kbhit();
+		if(dir == 0){
+			moveSnake(prevdir);
 		}else{
 			moveSnake(dir);
+			usleep(1000);
+			prevdir = dir;
 		}
-		usleep(10000);
+		usleep(1000 * 100 * 1);
 	}
 }
 
 void init(){
 	/* init tail */
 	tail = (struct snake *)malloc(sizeof(struct snake));
-	tail -> x = 5;
+	tail -> x = 10;
 	tail -> y = 10;
 	tail -> next = NULL;
 
 	/* init body */
 	for(int i=0; i<4; i++){
 		new = (struct snake *)malloc(sizeof(struct snake));
-		new -> x = (tail -> x) + 1;
+		new -> x = (tail -> x) - 1;
 		new -> y = tail -> y;
 		new -> next = tail;
 		tail = new;
@@ -78,6 +83,7 @@ void init(){
 }
 
 void clearView(void){
+	system("clear");
 	/* init field */
 	for(int i=0; i<YSIZE; i++){
 		for(int j=0; j<XSIZE; j++){
