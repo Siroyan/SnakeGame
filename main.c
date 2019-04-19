@@ -14,6 +14,7 @@
 void init(void);
 void moveSnake(char);
 void clearView(void);
+void genEsaPosition(void);
 
 struct snake {
 	int x;
@@ -21,7 +22,9 @@ struct snake {
 	struct snake *next;
 };
 struct snake *new, *tail, *tgt;
-int field[20][20];
+int field[XSIZE][YSIZE];
+int esaX;
+int esaY;
 
 int main(void){
 	/* new := pointer of extension amount */
@@ -31,26 +34,53 @@ int main(void){
 	char prevdir = 'd';
 	int buf;
 	int cnt = 0;
+	int isEat = 1;
+	int isFailed = 0;
 	init();
-	while(1){
+	while(isFailed == 0){
 		clearView();
 		
-		/* set snake to field */
+		/* set snake to field and check*/
 		tgt = tail;
 		while(tgt != NULL){
-			field[tgt->y][tgt->x] = 2;
-			tgt = tgt -> next;
+			if(field[tgt->x][tgt->y] != WALL && field[tgt->x][tgt->y] != SNAKE){
+				field[tgt->x][tgt->y] = SNAKE;
+				tgt = tgt -> next;
+			}else{
+				isFailed = 1;
+				break;
+			}
 		}
 
+		/* set esa */
+		if(isEat == 1){
+			genEsaPosition();
+			isEat = 0;
+		}
+		field[esaX][esaY] = ESA;
 		/* show field */
-		for(int x=0; x<XSIZE; x++){
-			for(int y=0; y<YSIZE; y++){
-				if(field[x][y] == ESA) printf("◆ ");
-				if(field[x][y] == SNAKE) printf("● ");
-				if(field[x][y] == AREA) printf("□ ");
-				if(field[x][y] == EMPTY) printf("  ");
+		for(int y=0; y<YSIZE; y++){
+			for(int x=0; x<XSIZE; x++){
+				if(field[y][x] == ESA) printf("◆ ");
+				if(field[y][x] == SNAKE) printf("● ");
+				if(field[y][x] == AREA) printf("□ ");
+				if(field[y][x] == WALL) printf("■ ");
+				if(field[y][x] == EMPTY) printf("  ");
 			}
 			printf("\n");
+		}
+
+		tgt = tail;
+		while(tgt -> next != NULL){
+			tgt = tgt -> next;
+		}
+		if((esaX == tgt -> x) && (esaY == tgt -> y)){
+			new = (struct snake *)malloc(sizeof(struct snake));
+			new -> x = (tail -> x) - 1;
+			new -> y = tail -> y;
+			new -> next = tail;
+			tail = new;
+			isEat = 1;
 		}
 
 		dir = kbhit();
@@ -63,6 +93,12 @@ int main(void){
 		}
 		usleep(1000 * 100 * 1);
 	}
+	if (isFailed == 1) {
+		printf("GameOver");
+	}else{
+		printf("GameClear");
+	}
+	
 }
 
 void init(){
@@ -85,12 +121,19 @@ void init(){
 void clearView(void){
 	system("clear");
 	/* init field */
-	for(int i=0; i<YSIZE; i++){
-		for(int j=0; j<XSIZE; j++){
-			if(i==0||j==0||i==YSIZE-1||j==XSIZE-1) field[i][j] = WALL;
-			else field[i][j] = AREA;
+	for(int y=0; y<YSIZE; y++){
+		for(int x=0; x<XSIZE; x++){
+			if(y==0||x==0||y==YSIZE-1||x==XSIZE-1) field[y][x] = WALL;
+			else field[y][x] = AREA;
 		}
 	}
+}
+
+void genEsaPosition(void){
+	do{
+		esaX = rand() % XSIZE - 1;
+		esaY = rand() % YSIZE - 1;
+	}while(field[esaX][esaY] != AREA);
 }
 
 void moveSnake(char dir){
@@ -103,19 +146,19 @@ void moveSnake(char dir){
 	switch(dir){
 		case 'w':
 			printf("Up\n");
-			tgt -> y = tgt -> y - 1;
+			tgt -> x = tgt -> x - 1;
 			break;
 		case 'a':
 			printf("Left\n");
-			tgt -> x = tgt -> x - 1;
+			tgt -> y = tgt -> y - 1;
 			break;
 		case 's':
 			printf("Down\n");
-			tgt -> y = tgt -> y + 1;
+			tgt -> x = tgt -> x + 1;
 			break;
 		case 'd':
 			printf("Right\n");
-			tgt -> x = tgt -> x + 1;
+			tgt -> y = tgt -> y + 1;
 			break;
 		default:
 			printf("Error\n");
